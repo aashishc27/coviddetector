@@ -5,19 +5,16 @@
 
     <item
         android:bottom="300dp"
+        android:left="300dp"
+        android:right="300dp"
         android:top="200dp">
         <bitmap
             android:gravity="center"
-            android:src="@drawable/splash_logo" />
+            android:src="@drawable/distance" />
     </item>
 
-    <item
-        android:bottom="80dp"
-        android:left="50dp"
-        android:right="50dp">
-        <bitmap
-            android:gravity="bottom|center"
-            android:src="@drawable/splash_icons" />
-    </item>
+
+
+
 
 </layer-list>

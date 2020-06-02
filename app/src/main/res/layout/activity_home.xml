@@ -13,6 +13,7 @@
         <ImageView
             android:id="@+id/menu"
             android:layout_width="40dp"
+            android:visibility="gone"
             android:layout_height="40dp"
             android:layout_alignBottom="@+id/divider"
             android:layout_alignParentStart="true"
@@ -51,6 +52,7 @@
 
         <ImageView
             android:id="@+id/language_change"
+            android:visibility="gone"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:layout_alignBottom="@+id/divider"
@@ -68,6 +70,7 @@
         <ImageView
             android:id="@+id/share"
             android:layout_width="40dp"
+            android:visibility="gone"
             android:layout_height="40dp"
             android:layout_alignBottom="@+id/divider"
             android:layout_alignParentTop="true"

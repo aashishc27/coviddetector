@@ -63,6 +63,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
 
+import db.FightCovidDB;
+import db.dao.BluetoothDataDao;
 import prefs.SharedPref;
 import prefs.SharedPrefsConstants;
 import utilities.Constants;
@@ -70,6 +72,7 @@ import utilities.CorUtility;
 import utilities.CorUtilityKt;
 import utilities.ExecutorHelper;
 import utilities.Logger;
+import utilities.UploadDataUtil;
 
 import static utilities.LocalizationUtil.getLocalisedString;
 
@@ -78,8 +81,8 @@ import static utilities.LocalizationUtil.getLocalisedString;
  * @author Chandrapal Yadav
  * @author Niharika.Arora
  */
-public class HomeActivity extends AppCompatActivity implements SelectLanguageFragment.LanguageChangeListener, NoNetworkDialog.Retry, NoBluetoothDialog.BluetoothActionListener,View.OnClickListener,
-        InstallStateUpdatedListener, SyncDataDialog.SyncDataModeListener, SyncDataConsentDialog.ConfirmationListener, SyncDataStateDialog.SyncListener {
+public class HomeActivity extends AppCompatActivity implements NoNetworkDialog.Retry, NoBluetoothDialog.BluetoothActionListener,View.OnClickListener,
+        InstallStateUpdatedListener, SyncDataDialog.SyncDataModeListener, SyncDataConsentDialog.ConfirmationListener, SyncDataStateDialog.SyncListener,UploadDataUtil.UploadListener {
     private static final String TAG = HomeActivity.class.getSimpleName();
 
     public static final String FRAG_NO_BT_DIALOG = "frag_no_bt_dialog";
@@ -105,68 +108,11 @@ public class HomeActivity extends AppCompatActivity implements SelectLanguageFra
     private NoNetworkDialog networkDialog;
     private WebView webView;
     private HomeNavigationView homeNavigationView;
-
-    final Object javaScriptInterface = new Object() {
-        @JavascriptInterface
-        public void shareApp() {
-            String appUrl = CorUtility.getShareText(HomeActivity.this);
-            Intent intent = new Intent(Intent.ACTION_SEND);
-            intent.setType("text/plain");
-            intent.putExtra(Intent.EXTRA_TEXT, appUrl);
-            startActivity(Intent.createChooser(intent, ""));
-        }
-
-        @JavascriptInterface
-        public String getHeaders() {
-            Map<String, String> crunchifyMap = CorUtility.Companion.getHeaders(false);
-            final Location lastLocation = CoronaApplication.getInstance().getDeviceLastKnownLocation();
-            if (lastLocation != null) {
-                crunchifyMap.put(Constants.LATITUDE, String.valueOf(lastLocation.getLatitude()));
-                crunchifyMap.put(Constants.LONGITUDE, String.valueOf(lastLocation.getLongitude()));
-            }
-            GsonBuilder gsonMapBuilder = new GsonBuilder();
-
-            Gson gsonObject = gsonMapBuilder.create();
-
-            return gsonObject.toJson(crunchifyMap);
-        }
-
-        @JavascriptInterface
-        public void changeLanguage() {
-            showLanguageSelectionDialog();
-        }
-
-        @JavascriptInterface
-        public void backPressed() {
-            if (webView.canGoBack()) {
-                webView.goBack();
-            }
-        }
-
-
-        @JavascriptInterface
-        public void copyToClipboard(String text) {
-            ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-            if (clipboard != null) {
-                clipboard.setPrimaryClip(ClipData.newPlainText(null, text));
-            }
-        }
-
-
-        @JavascriptInterface
-        public void hideLoader() {
-            if (progressBar != null) {
-                progressBar.setVisibility(View.GONE);
-            }
-        }
-
-        @JavascriptInterface
-        public void askForUpload() {
-            onUploadDataClicked();
-        }
-
-    };
+    private UploadDataUtil mUploadDataUtil;
     private FullScreenVideoWebChromeClient fullScreenVideoWebChromeClient;
+   BluetoothDataDao bluetoothDataDao;
+
+
 
     private void disableScreenShot() {
         try {
@@ -193,9 +139,10 @@ public class HomeActivity extends AppCompatActivity implements SelectLanguageFra
         if (!BuildConfig.DEBUG) {
             disableScreenShot();
         }
+
+
         webView = findViewById(R.id.webView);
-        progressBar = findViewById(R.id.progress_bar);
-        progressBar.setVisibility(View.VISIBLE);
+
         back = findViewById(R.id.back);
         menu = findViewById(R.id.menu);
 
@@ -212,13 +159,12 @@ public class HomeActivity extends AppCompatActivity implements SelectLanguageFra
         doNotShowBack = getIntent().getBooleanExtra(HomeActivity.DO_NOT_SHOW_BACK, false);
 
         setupNavigationMenu();
-        setupWebView();
 
-        if (!CorUtility.isNetworkAvailable(HomeActivity.this)) {
-            showRetryDialog(getCurrentBaseURL());
-        } else {
-            loadUrl(getCurrentBaseURL());
-        }
+//        if (!CorUtility.isNetworkAvailable(HomeActivity.this)) {
+//            showRetryDialog(getCurrentBaseURL());
+//        } else {
+//            loadUrl(getCurrentBaseURL());
+//        }
 
         final boolean needPermissions = getIntent().getBooleanExtra(EXTRA_ASK_PERMISSION, false);
         if (needPermissions) {
@@ -279,131 +225,6 @@ public class HomeActivity extends AppCompatActivity implements SelectLanguageFra
 //        });
     }
 
-    private void setupWebView() {
-        if (BuildConfig.DEBUG) {
-            WebView.setWebContentsDebuggingEnabled(true);
-        }
-        webView.getSettings().setJavaScriptEnabled(true);
-        webView.getSettings().setDomStorageEnabled(true);
-        webView.addJavascriptInterface(javaScriptInterface, "JSMobileCrm");
-        fullScreenVideoWebChromeClient = new FullScreenVideoWebChromeClient();
-        webView.setWebChromeClient(fullScreenVideoWebChromeClient);
-        webView.setWebViewClient(new WebViewClient() {
-            @Override
-            public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                if (url.startsWith("tel:")) {
-                    try {
-                        Intent intent = new Intent(Intent.ACTION_DIAL,
-                                Uri.parse(url));
-                        startActivity(intent);
-                    } catch (ActivityNotFoundException ignored) {
-                        // do nothing
-                    }
-
-                } else {
-
-//                    boolean isMyUrl = BuildConfig.WEB_HOST.equals(Uri.parse(url).getHost());
-//
-//                    if (!CorUtility.isNetworkAvailable(HomeActivity.this)) {
-//                        showRetryDialog(isMyUrl ? url : "");
-//                        progressBar.setVisibility(View.GONE);
-//                    } else {
-//                        if (isMyUrl) {
-//                            // This is my website, so do not override; let my WebView load the page
-//                            return false;
-//                        }
-//                        progressBar.setVisibility(View.GONE);
-//                        // Otherwise, the link is not for a page on my site, so launch another Activity that handles URLs
-//                        openDefaultBrowser(url);
-//                        return true;
-//                    }
-                }
-                progressBar.setVisibility(View.GONE);
-                return true;
-            }
-
-            @Override
-            public void onPageStarted(WebView view, String url, Bitmap favicon) {
-
-                if (url.startsWith("tel:")) {
-                    Intent intent = new Intent(Intent.ACTION_DIAL,
-                            Uri.parse(url));
-                    startActivity(intent);
-                } else if (url.startsWith("http:") || url.startsWith("https:")) {
-
-                    if (!CorUtility.isNetworkAvailable(HomeActivity.this)) {
-                        showRetryDialog(url);
-
-                    } else {
-                        progressBar.setVisibility(View.VISIBLE);
-                        webView.clearHistory();
-                        if (!isTopUrlSame(url))
-                            webPageStack.push(url);
-                        super.onPageStarted(view, url, favicon);
-                        if (webPageStack.isEmpty() || (webPageStack.size() == 1 && doNotShowBack)) {
-                            menu.setVisibility(View.VISIBLE);
-                            back.setVisibility(View.GONE);
-                        } else {
-                            menu.setVisibility(View.GONE);
-                            menuIntro.setVisibility(View.GONE);
-                            back.setVisibility(View.VISIBLE);
-                        }
-                    }
-                }
-
-            }
-
-            @Override
-            public void onPageFinished(WebView view, String url) {
-                progressBar.setVisibility(View.GONE);
-                super.onPageFinished(view, url);
-            }
-
-            @Override
-            public void onReceivedHttpError(WebView view, WebResourceRequest request, WebResourceResponse errorResponse) {
-                super.onReceivedHttpError(view, request, errorResponse);
-                if (errorResponse.getStatusCode() == 401) {
-                    progressBar.setVisibility(View.VISIBLE);
-                    ExecutorHelper.getThreadPoolExecutor().execute(() -> {
-
-                        try {
-                            boolean isTokenUpdated = false;
-                            for (int i = 0; i < 3; i++) {
-                                final boolean isNewTokenUpdated = updateToken();
-                                if (isNewTokenUpdated) {
-                                    isTokenUpdated = true;
-                                    break;
-                                }
-                            }
-                            if (!isTokenUpdated) {
-                                throw new IOException();
-                            }
-//                            AppExecutors.INSTANCE.runOnMain(() -> {
-//                                try {
-//                                    progressBar.setVisibility(View.GONE);
-//                                    loadUrl(getCurrentBaseURL());
-//                                } catch (Exception e) {
-//                                    CorUtilityKt.reportException(e);
-//                                }
-//                                return null;
-//                            });
-                        } catch (IOException e) {
-//                            AuthUtility.logout(CoronaApplication.instance);
-//                            // What to do here??
-//                            AppExecutors.INSTANCE.runOnMain(() -> {
-//                                if (isFinishing()) {
-//                                    return null;
-//                                }
-//                                progressBar.setVisibility(View.GONE);
-//                                // Maybe show some error here
-//                                return null;
-//                            });
-                        }
-                    });
-                }
-            }
-        });
-    }
 
     private void openDefaultBrowser(String url) {
         try {
@@ -669,18 +490,6 @@ public class HomeActivity extends AppCompatActivity implements SelectLanguageFra
         intent.putExtra(Constants.URL, url);
         intent.putExtra(Constants.TITLE, title);
         return intent;
-    }
-
-    @Override
-    public void languageChange() {
-        if (!webPageStack.isEmpty()) {
-            try {
-                loadUrl(getChangedUrl(webPageStack.pop()));
-            } catch (MalformedURLException e) {
-                //do nothing
-            }
-        }
-        updateNavigationDrawer();
     }
 
     /**
@@ -968,7 +777,10 @@ public class HomeActivity extends AppCompatActivity implements SelectLanguageFra
 
     private void checkForDataUpload() {
 
-//        if (!FirebaseRemoteConfigUtil.getINSTANCE().isUploadEnabled() || SharedPref.getBooleanParams(getBaseContext(), Constants.PUSH_COVID_POSTIVE_P) || !AuthUtility.INSTANCE.isSignedIn()) // Put status and condition here if possible
+        String uploadType = "Sync";
+        showSyncDataConsentDialog(uploadType);
+
+//        if (!FirebaseRemoteConfigUtil.getINSTANCE().isUploadEnabled() || SharedPref.getBooleanParams(getBaseContext(), Constants.PUSH_COVID_POSTIVE_P) ) // Put status and condition here if possible
 //        {
 //            homeNavigationView.hideShareData();
 //        }
@@ -990,8 +802,20 @@ public class HomeActivity extends AppCompatActivity implements SelectLanguageFra
     }
 
     private void startUploading(String uploadType) {
-//        mUploadDataUtil = new UploadDataUtil(uploadType, this);
-//        mUploadDataUtil.startInBackground();
+        mUploadDataUtil = new UploadDataUtil(uploadType, this);
+        mUploadDataUtil.startInBackground();
+    }
+
+    @Override
+    public void onUploadSuccess() {
+        showSyncingDataDialog(SyncDataStateDialog.State.SUCCESS, null);
+        mUploadDataUtil = null;
+    }
+
+    @Override
+    public void onUploadFailure(@NotNull String uploadType) {
+        showSyncingDataDialog(SyncDataStateDialog.State.FAILURE, uploadType);
+        mUploadDataUtil = null;
     }
 
     private class FullScreenVideoWebChromeClient extends WebChromeClient {

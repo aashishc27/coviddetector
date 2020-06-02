@@ -9,7 +9,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Lifecycle
 import bluetooth.BluetoothScanningService
-import com.example.coviddetector.BuildConfig
+import com.example.coviddetector.R
 import com.example.coviddetector.background_.CoronaApplication
 import com.example.coviddetector.background_.FirebaseRemoteConfigUtil
 import com.google.android.gms.common.GoogleApiAvailability
@@ -26,7 +26,7 @@ import utilities.CorUtility.Companion.isNetworkAvailable
  * @author Chandrapal Yadav
  * @author Niharika.Arora
  */
-class SplashActivity : AppCompatActivity(), SelectLanguageFragment.LanguageChangeListener,
+class SplashActivity : AppCompatActivity(),
     NoNetworkDialog.Retry, ProviderInstaller.ProviderInstallListener {
     companion object {
         const val TIME_DELAY: Long = 200
@@ -35,8 +35,10 @@ class SplashActivity : AppCompatActivity(), SelectLanguageFragment.LanguageChang
 
     private var retryProviderInstall: Boolean = false
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_splash);
         val rooted: Boolean = CommonUtils.isRooted(this)
         if (rooted) {
             showDialogAndFinish(Constants.ROOT_ALERT)
@@ -44,6 +46,7 @@ class SplashActivity : AppCompatActivity(), SelectLanguageFragment.LanguageChang
         } else {
             ProviderInstaller.installIfNeededAsync(this, this)
         }
+
 //        AnalyticsUtils.updateUserTraits()
 //        AnalyticsUtils.sendEvent(EventNames.EVENT_OPEN_SPLASH)
     }
@@ -64,27 +67,23 @@ class SplashActivity : AppCompatActivity(), SelectLanguageFragment.LanguageChang
     }
 
     /**
-     * This method is used to decide next step. If Language not selected then select app language.
+     * This method is used to decide next step.
      * if signed in then go to dashboard else go to On-boarding procedure.
      */
     private fun proceedToNextSteps() {
         CoronaApplication.warmUpLocation()
-        if (SharedPref.hasKey(this, SharedPrefsConstants.USER_SELECTED_LANGUAGE_CODE)) {
-           // CorUtility.checkStatus(this)
-            Handler().postDelayed({
-                if (true) {//check if login
-                    if (!BluetoothScanningService.serviceRunning) {
-                        CorUtility.startService(this)
-                    }
-                    CorUtility.startBackgroundWorker()
-                    launchHomeScreen()
-                } else {
-                    startOnBoardingActivity()
+        Handler().postDelayed({
+            if (CorUtility.arePermissionsGranted(this)){
+                if (!BluetoothScanningService.serviceRunning) {
+                    CorUtility.startService(this)
                 }
-            }, TIME_DELAY)
-        } else {
-            showLanguageSelectionDialog()
-        }
+                CorUtility.startBackgroundWorker()
+                launchHomeScreen()
+            }else{
+                startPermissionActivty()
+
+            }
+        }, TIME_DELAY)
     }
 
     private fun launchHomeScreen() {
@@ -170,22 +169,13 @@ class SplashActivity : AppCompatActivity(), SelectLanguageFragment.LanguageChang
         return false
     }
 
-    private fun showLanguageSelectionDialog() {
-        if (supportFragmentManager.isDestroyed) {
-            startOnBoardingActivity()
-        }
-        SelectLanguageFragment.showDialog(supportFragmentManager, false)
+
+    private fun startPermissionActivty() {
+        startActivity(Intent(this, PermissionActivity::class.java))
+        finish()
     }
 
-    private fun startOnBoardingActivity() {
-//        startActivity(Intent(this, OnboardingActivity::class.java))
-//        finish()
-    }
 
-    override fun languageChange() {
-//        startActivity(Intent(this, OnboardingActivity::class.java))
-//        finish()
-    }
 
     private fun showNoInternet() {
         val networkDialog = NoNetworkDialog()

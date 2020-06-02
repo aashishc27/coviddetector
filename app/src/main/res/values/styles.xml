@@ -33,10 +33,7 @@
         <item name="cornerSize">20dp</item>
     </style>
 
-    <style name="AppTheme.Splash">
-        <item name="android:statusBarColor">@color/white</item>
-        <item name="android:windowBackground">@drawable/background_splash</item>
-    </style>
+
 
     <style name="AppButton" parent="Widget.MaterialComponents.Button">
         <item name="backgroundTint">@color/black</item>

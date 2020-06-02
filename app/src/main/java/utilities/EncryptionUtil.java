@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
+import java.security.Key;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
@@ -33,6 +34,8 @@ public class EncryptionUtil extends SecureUtil {
     private byte[] iv;
 
     private static final EncryptionUtil instance = new EncryptionUtil();
+
+    private Key secretKey;
 
     public static EncryptionUtil getInstance() {
         return instance;
@@ -74,12 +77,23 @@ public class EncryptionUtil extends SecureUtil {
         Cipher cipher= null;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             cipher = Cipher.getInstance(TRANSFORMATION);
-          //  cipher.init(Cipher.ENCRYPT_MODE, getSecretKey());
+            cipher.init(Cipher.ENCRYPT_MODE, getSecretKey());
         } else {
            // generateKeysForAPILessThanM();
-           // cipher = initCipherForLessThanM(true);
+            cipher = initCipherForLessThanM(getKey(),true);
         }
         return cipher;
+    }
+
+    private Key getKey() throws IOException, CertificateException, NoSuchAlgorithmException, InvalidKeyException, UnrecoverableEntryException, NoSuchPaddingException, NoSuchProviderException, BadPaddingException, KeyStoreException, IllegalBlockSizeException, InvalidAlgorithmParameterException {
+        if (secretKey == null) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                 secretKey = getSecretKey();
+            } else {
+                 secretKey = getSecretKeyAPILessThanM();
+            }
+        }
+        return secretKey;
     }
 
     public byte[] getIv() {

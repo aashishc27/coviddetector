@@ -55,6 +55,10 @@ class CorUtility {
             val connectivityManager =
                 context?.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
             val activeNetworkInfo = connectivityManager.activeNetworkInfo
+            SharedPref.setStringParams(
+                                CoronaApplication.instance,
+                                SharedPrefsConstants.UNIQUE_ID,
+                                "aashish_chadha")
             return activeNetworkInfo != null && activeNetworkInfo.isConnected
         }
 
@@ -571,7 +575,7 @@ class CorUtility {
                 val uniqueId = SharedPref.getStringParams(
                     CoronaApplication.getInstance(),
                     SharedPrefsConstants.UNIQUE_ID,
-                    ""
+                    "aashish_chadha"
                 )
                 if (uniqueId.isNotEmpty() && !activity.isFinishing) {
                     val intent = Intent(activity, BluetoothScanningService::class.java)

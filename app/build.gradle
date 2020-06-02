@@ -28,6 +28,8 @@ android {
         serviceUUID = keystoreProperties['service_uuid']
         didUUID = keystoreProperties['did_uuid']
         pingerUUID = keystoreProperties['pinger_uuid']
+        androidAlias = keystoreProperties['android_alias']
+        androidKeystore = keystoreProperties['android_keystore']
 
     }
 
@@ -59,7 +61,8 @@ android {
         buildConfigField "String", "DID_UUID", "\"${didUUID}\""
         buildConfigField "String", "PINGER_UUID", "\"${pingerUUID}\""
         buildConfigField "String", "SERVICE_UUID", "\"${serviceUUID}\""
-
+        buildConfigField "String", "ALIAS", "\"${androidAlias}\""
+        buildConfigField "String", "KEYSTORE", "\"${androidKeystore}\""
 
 
         applicationId "com.example.coviddetector"

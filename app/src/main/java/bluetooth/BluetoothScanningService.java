@@ -202,7 +202,7 @@ public class BluetoothScanningService extends Service implements AdaptiveScanHel
             return;
         }
         List<ScanFilter> filters = new ArrayList<>();
-
+        String val = UUID.randomUUID().toString();
         ScanFilter filter = new ScanFilter.Builder()
                 .setServiceUuid(new ParcelUuid(UUID.fromString(BuildConfig.SERVICE_UUID)))
                 .build();
