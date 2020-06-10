@@ -54,15 +54,9 @@ class SyncDataConsentDialog : DialogFragment() {
         btn_confirm_and_proceed.text = LocalizationUtil.getLocalisedString(context, R.string.confirm_and_proceed)
         btn_confirm_and_proceed.setOnClickListener {
             listener?.proceedSyncing(uploadType ?: Constants.UPLOAD_TYPES.BEING_TESTED)
-//            val bundle = Bundle()
-//            bundle.putString(EventParams.PROP_UPLOAD_TYPE, uploadType)
-//            sendEvent(EventNames.EVENT_SUBMIT_UPLOAD_CONSENT,bundle)
             dismissAllowingStateLoss()
         }
         close.setOnClickListener {
-//            val bundle = Bundle()
-//            bundle.putString(EventParams.PROP_UPLOAD_TYPE, uploadType)
-//            sendEvent(EventNames.EVENT_CONSENT_CANCELLED,bundle)
             dismissAllowingStateLoss()
         }
 

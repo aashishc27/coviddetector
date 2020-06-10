@@ -62,7 +62,6 @@ public class GattServer {
             }
         }
 
-        @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
         @Override
         public void onCharacteristicReadRequest(BluetoothDevice device, int requestId, int offset, BluetoothGattCharacteristic characteristic) {
             if (UUID.fromString(BuildConfig.DID_UUID).equals(characteristic.getUuid())) {
@@ -82,7 +81,6 @@ public class GattServer {
         mBluetoothManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     public void advertise(int advertisementMode) {
         try {
             BluetoothAdapter defaultAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -128,7 +126,6 @@ public class GattServer {
         }
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     private void startAdvertising(AdvertiseSettings.Builder settingsBuilder, AdvertiseData data, boolean isConnectable) {
         settingsBuilder.setConnectable(isConnectable);
         if (CorUtility.isBluetoothAvailable() && advertiser != null && advertisingCallback != null) {
@@ -138,7 +135,6 @@ public class GattServer {
         }
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     public void addGattService() {
         if (CorUtility.isBluetoothAvailable() && isServerStarted()) {
             try {
@@ -149,7 +145,6 @@ public class GattServer {
         }
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     private BluetoothGattService createGattService() {
         BluetoothGattService service = new BluetoothGattService(UUID.fromString(BuildConfig.SERVICE_UUID), BluetoothGattService.SERVICE_TYPE_PRIMARY);
 

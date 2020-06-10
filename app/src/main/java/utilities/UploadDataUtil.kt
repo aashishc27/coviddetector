@@ -57,8 +57,19 @@ class UploadDataUtil(
             rowCount: Long
     ) {
 
-        uploadSuccess();
+        uploadSuccess()
 
+
+//        val mFetchedRows =
+//                        if (bulkDataObj.data == null) 0 else bulkDataObj.data.size
+//                mOffset += mFetchedRows
+//                Logger.d(TAG, "uploadDataInChunks $mOffset <+ $rowCount")
+//                if (mOffset.toLong() < rowCount) {
+//                    val bulkDataObject = getBulkDataObject()
+//                    uploadDataInChunks(bulkDataObject, rowCount)
+//                } else {
+//                    uploadSuccess()
+//                }
 
 //        try {
 //            val response =

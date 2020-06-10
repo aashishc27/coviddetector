@@ -74,11 +74,11 @@ public class BluetoothScanningService extends Service implements AdaptiveScanHel
         @Override
         public void onScanResult(int callbackType, ScanResult result) {
             super.onScanResult(callbackType, result);
-            Logger.d(TAG, "onScanResult : Scanning : " + result.getDevice().getName());
+            Logger.d(TAG, "onScanResult : Scanning : " + result.getDevice().getAddress());
             if (CorUtility.isBluetoothPermissionAvailable(CoronaApplication.instance)) {
-                if (result == null || result.getDevice() == null || result.getDevice().getName() == null)
+                if (result == null || result.getDevice() == null || result.getDevice().getAddress() == null)
                     return;
-                String deviceName = result.getDevice().getName();
+                String deviceName = result.getDevice().getAddress();
                 clearList();
                 mAdaptiveScanHelper.addScanResult(result);
                 if (mData.contains(deviceName)) {
@@ -191,7 +191,6 @@ public class BluetoothScanningService extends Service implements AdaptiveScanHel
      * Start scanning BLE devices with provided scan mode
      * @param scanMode
      */
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     private void discover(int scanMode) {
         BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
         if (adapter == null) {
@@ -202,11 +201,12 @@ public class BluetoothScanningService extends Service implements AdaptiveScanHel
             return;
         }
         List<ScanFilter> filters = new ArrayList<>();
-        String val = UUID.randomUUID().toString();
+
         ScanFilter filter = new ScanFilter.Builder()
                 .setServiceUuid(new ParcelUuid(UUID.fromString(BuildConfig.SERVICE_UUID)))
                 .build();
         filters.add(filter);
+
         ScanSettings.Builder settings = new ScanSettings.Builder()
                 .setScanMode(scanMode);
 
@@ -219,7 +219,8 @@ public class BluetoothScanningService extends Service implements AdaptiveScanHel
         }
         try {
             if (isBluetoothAvailable()) {
-                mBluetoothLeScanner.startScan(filters, settings.build(), mScanCallback);
+                mBluetoothLeScanner.startScan(mScanCallback);
+             //   mBluetoothLeScanner.startScan(filters, settings.build(), mScanCallback);
             } else {
                 Logger.e(TAG, "startingScan failed : Bluetooth not available");
             }

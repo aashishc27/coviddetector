@@ -3,6 +3,7 @@ package utilities
 import android.bluetooth.le.AdvertiseSettings
 import android.bluetooth.le.ScanResult
 import android.bluetooth.le.ScanSettings
+import com.example.coviddetector.background_.FirebaseRemoteConfigUtil
 import org.jetbrains.annotations.NotNull
 import java.util.*
 
@@ -35,24 +36,24 @@ class AdaptiveScanHelper(private val listener: AdaptiveModeListener) {
 //        if (!FirebaseRemoteConfigUtil.INSTANCE.isAdaptiveScanEnabled()) {
 //            return
 //        }
-//        val name = result.device.name
-//        if (name.isNullOrEmpty()) {
-//            Logger.d(TAG, "Name is null or empty")
-//            return
-//        }
-//        val timestampInMilliSec = result.timestampNanos / 1000000
-//        val lastResultTimestamp = mUniqueDevicesTime[name]
-//
-//        lastResultTimestamp?.let {
-//            val latency = timestampInMilliSec - it
-//            if (latency < mMinAdvertisingInterval)
-//                mMinAdvertisingInterval = latency
-//        }
-//        Logger.d(
-//            TAG,
-//            "addScanResult for: $name, minAdvertisingInterval $mMinAdvertisingInterval"
-//        )
-//        mUniqueDevicesTime[name] = timestampInMilliSec
+        val name = result.device.name
+        if (name.isNullOrEmpty()) {
+            Logger.d(TAG, "Name is null or empty")
+            return
+        }
+        val timestampInMilliSec = result.timestampNanos / 1000000
+        val lastResultTimestamp = mUniqueDevicesTime[name]
+
+        lastResultTimestamp?.let {
+            val latency = timestampInMilliSec - it
+            if (latency < mMinAdvertisingInterval)
+                mMinAdvertisingInterval = latency
+        }
+        Logger.d(
+            TAG,
+            "addScanResult for: $name, minAdvertisingInterval $mMinAdvertisingInterval"
+        )
+        mUniqueDevicesTime[name] = timestampInMilliSec
     }
 
     /**
@@ -63,19 +64,19 @@ class AdaptiveScanHelper(private val listener: AdaptiveModeListener) {
 //            Logger.d(TAG, "Not started because adaptive scan disabled")
 //            return
 //        }
-//        Logger.d(TAG, "start()")
-//        val kScanInterval = FirebaseRemoteConfigUtil.INSTANCE.getAdaptiveScanKScanInterval()
-//        mTimer?.cancel()
-//        mTimer = Timer()
-//        mTimer?.scheduleAtFixedRate(
-//            object : TimerTask() {
-//                override fun run() {
-//                    evaluate()
-//                }
-//            },
-//            kScanInterval,
-//            kScanInterval
-//        )
+        Logger.d(TAG, "start()")
+        val kScanInterval = FirebaseRemoteConfigUtil.INSTANCE.getAdaptiveScanKScanInterval()
+        mTimer?.cancel()
+        mTimer = Timer()
+        mTimer?.scheduleAtFixedRate(
+            object : TimerTask() {
+                override fun run() {
+                    evaluate()
+                }
+            },
+            kScanInterval,
+            kScanInterval
+        )
     }
 
     /**
@@ -107,44 +108,44 @@ class AdaptiveScanHelper(private val listener: AdaptiveModeListener) {
      * if scan mode is Balanced Mode and data is crossing lower limit of balanced mode then change mode to Low Power
      * if scan mode is Low Latency and delta is in acceptable range then change mode to Balanced else change advertisement mode between Balanced and Low Latency alternatively
      */
-//    private fun evaluate() {
-//        val uniqueAppDevicesCount = mUniqueDevicesTime.size
-//        Logger.d(
-//            TAG,
-//            "v scanMode=$scanMode and advertisementMode=$advertisementMode, with uniqueAppDevicesCount=$uniqueAppDevicesCount, minAdvertisingInterval=$mMinAdvertisingInterval "
-//        )
-//        if (scanMode != ScanSettings.SCAN_MODE_LOW_LATENCY) {
-//            if (uniqueAppDevicesCount >= FirebaseRemoteConfigUtil.INSTANCE.getAdaptiveScanUpperBalancedUniqueAppDevices() || (mMinAdvertisingInterval != Long.MAX_VALUE && mMinAdvertisingInterval >= FirebaseRemoteConfigUtil.INSTANCE.getAdaptiveScanUpperBalancedAdvertisementInterval())) {
-//                changeMode(
-//                    ScanSettings.SCAN_MODE_LOW_LATENCY,
-//                    AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY
-//                )
-//            } else if (uniqueAppDevicesCount >= FirebaseRemoteConfigUtil.INSTANCE.getAdaptiveScanLowerBalancedUniqueAppDevices() || (mMinAdvertisingInterval != Long.MAX_VALUE && mMinAdvertisingInterval >= FirebaseRemoteConfigUtil.INSTANCE.getAdaptiveScanLowerBalancedAdvertisementInterval())) {
-//                changeMode(
-//                    ScanSettings.SCAN_MODE_BALANCED,
-//                    AdvertiseSettings.ADVERTISE_MODE_BALANCED
-//                )
-//            } else {
-//                changeMode(
-//                    ScanSettings.SCAN_MODE_LOW_POWER,
-//                    AdvertiseSettings.ADVERTISE_MODE_LOW_POWER
-//                )
-//            }
-//        } else if (mOldUniqueDevicesCount != Int.MAX_VALUE) {
-//            if ((uniqueAppDevicesCount - mOldUniqueDevicesCount) >= FirebaseRemoteConfigUtil.INSTANCE.getAdaptiveScanAcceptableUniqueDeviceDelta()) {
-//                val advertisementMode =
-//                    if (advertisementMode == AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY) AdvertiseSettings.ADVERTISE_MODE_BALANCED else AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY
-//                changeMode(ScanSettings.SCAN_MODE_LOW_LATENCY, advertisementMode)
-//            } else {
-//                changeMode(
-//                    ScanSettings.SCAN_MODE_BALANCED,
-//                    AdvertiseSettings.ADVERTISE_MODE_BALANCED
-//                )
-//            }
-//        }
-//        mOldUniqueDevicesCount = uniqueAppDevicesCount
-//        clear()
-//    }
+    private fun evaluate() {
+        val uniqueAppDevicesCount = mUniqueDevicesTime.size
+        Logger.d(
+            TAG,
+            "v scanMode=$scanMode and advertisementMode=$advertisementMode, with uniqueAppDevicesCount=$uniqueAppDevicesCount, minAdvertisingInterval=$mMinAdvertisingInterval "
+        )
+        if (scanMode != ScanSettings.SCAN_MODE_LOW_LATENCY) {
+            if (uniqueAppDevicesCount >= FirebaseRemoteConfigUtil.INSTANCE.getAdaptiveScanUpperBalancedUniqueAppDevices() || (mMinAdvertisingInterval != Long.MAX_VALUE && mMinAdvertisingInterval >= FirebaseRemoteConfigUtil.INSTANCE.getAdaptiveScanUpperBalancedAdvertisementInterval())) {
+                changeMode(
+                    ScanSettings.SCAN_MODE_LOW_LATENCY,
+                    AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY
+                )
+            } else if (uniqueAppDevicesCount >= FirebaseRemoteConfigUtil.INSTANCE.getAdaptiveScanLowerBalancedUniqueAppDevices() || (mMinAdvertisingInterval != Long.MAX_VALUE && mMinAdvertisingInterval >= FirebaseRemoteConfigUtil.INSTANCE.getAdaptiveScanLowerBalancedAdvertisementInterval())) {
+                changeMode(
+                    ScanSettings.SCAN_MODE_BALANCED,
+                    AdvertiseSettings.ADVERTISE_MODE_BALANCED
+                )
+            } else {
+                changeMode(
+                    ScanSettings.SCAN_MODE_LOW_POWER,
+                    AdvertiseSettings.ADVERTISE_MODE_LOW_POWER
+                )
+            }
+        } else if (mOldUniqueDevicesCount != Int.MAX_VALUE) {
+            if ((uniqueAppDevicesCount - mOldUniqueDevicesCount) >= FirebaseRemoteConfigUtil.INSTANCE.getAdaptiveScanAcceptableUniqueDeviceDelta()) {
+                val advertisementMode =
+                    if (advertisementMode == AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY) AdvertiseSettings.ADVERTISE_MODE_BALANCED else AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY
+                changeMode(ScanSettings.SCAN_MODE_LOW_LATENCY, advertisementMode)
+            } else {
+                changeMode(
+                    ScanSettings.SCAN_MODE_BALANCED,
+                    AdvertiseSettings.ADVERTISE_MODE_BALANCED
+                )
+            }
+        }
+        mOldUniqueDevicesCount = uniqueAppDevicesCount
+        clear()
+    }
 
     /**
      * This method is used to change mode of BluetoothLE Scan and advertisement and restarting scan window
@@ -154,14 +155,14 @@ class AdaptiveScanHelper(private val listener: AdaptiveModeListener) {
 //            Logger.d(TAG, "Mode Not changed because adaptive scan disabled")
 //            return
 //        }
-//        Logger.d(TAG, "changeMode with scanMode=$scanMode and advertisementMode=$advertisementMode")
-//        if (this.scanMode != scanMode || this.advertisementMode != advertisementMode) {
-//            this.scanMode = scanMode
-//            this.advertisementMode = advertisementMode
-//            listener.onModeChange(scanMode, advertisementMode)
-//            start()
-//            Logger.d(TAG, "changeMode completed")
-//        }
+        Logger.d(TAG, "changeMode with scanMode=$scanMode and advertisementMode=$advertisementMode")
+        if (this.scanMode != scanMode || this.advertisementMode != advertisementMode) {
+            this.scanMode = scanMode
+            this.advertisementMode = advertisementMode
+            listener.onModeChange(scanMode, advertisementMode)
+            start()
+            Logger.d(TAG, "changeMode completed")
+        }
     }
 
     /**
